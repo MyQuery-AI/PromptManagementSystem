@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator PrismaClient {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  Owner
+  Admin
+  Developer
+}
+
+enum Permission {
+  MANAGE_USERS
+  MANAGE_USER_ROLES
+  VIEW_PROMPTS
+  CREATE_PROMPTS
+  EDIT_PROMPTS
+  DELETE_PROMPTS
+  MANAGE_SYSTEM
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  emailConfirmed  Boolean          @default(false)
+  password        String
+  name            String?
+  otp             String?
+  otpId           String?          @unique
+  otpExpiresAt    DateTime?
+  role            Role             @default(Developer)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userPermissions UserPermission[]
+
+  @@map("users")
+}
+
+model UserPermission {
+  id         Int        @id @default(autoincrement())
+  userId     String
+  permission Permission
+  isRevoked  Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permission])
+  @@map("user_permissions")
+}
+
+model Prompt {
+  id         Int      @id @default(autoincrement())
+  feature    String // e.g. 'generate_sql', 'explain_query'
+  promptType String   @default("sql_generation") // Type of prompt from predefined list
+  version    String   @default("v1") // prompt version
+  content    String // actual prompt content
+  isActive   Boolean  @default(true) // active version toggle
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("prompts")
+}

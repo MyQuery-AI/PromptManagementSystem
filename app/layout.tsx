@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
+import { Header } from "@/components/header";
+import { ConditionalLayout } from "@/components/server-conditional-layout";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -33,7 +36,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex flex-col h-screen">
+            <Header />
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
