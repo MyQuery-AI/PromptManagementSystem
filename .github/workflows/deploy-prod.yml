@@ -1,0 +1,97 @@
+name: 🚀 Production Deploy on Push
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: prod-group
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Production Blue-Green with Health Check
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_SECRET }}
+          script: |
+            cd /opt/myquery-prompt-management-system/PromptManagementSystem
+            git fetch origin master
+            git checkout master
+            git reset --hard origin/master
+            git rev-parse --abbrev-ref HEAD
+            git log --oneline -1
+
+            # Determine current active deployment by checking which container is running
+            if docker ps --format "table {{.Names}}" | grep -q "prompt-manager-blue"; then
+              CURRENT_DEPLOYMENT="blue"
+              NEW_DEPLOYMENT="green"
+              OLD_DEPLOYMENT="blue"
+            else
+              CURRENT_DEPLOYMENT="green"
+              NEW_DEPLOYMENT="blue"
+              OLD_DEPLOYMENT="green"
+            fi
+
+            echo "Current deployment: $CURRENT_DEPLOYMENT"
+            echo "Deploying new version to: $NEW_DEPLOYMENT"
+
+            # Deploy new version
+            echo "Deploying $NEW_DEPLOYMENT..."
+            make deploy-$NEW_DEPLOYMENT
+
+            echo "Waiting for app to start..."
+            sleep 15
+
+            # Health check with retry logic
+            echo "Checking health..."
+            HEALTH_CHECK_ATTEMPTS=0
+            MAX_ATTEMPTS=10
+
+            while [ $HEALTH_CHECK_ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+              if docker exec prompt-manager-$NEW_DEPLOYMENT curl -sSf http://localhost:3001/api/health > /dev/null; then
+                echo "Health check passed for $NEW_DEPLOYMENT deployment."
+                HEALTH_PASSED=true
+                break
+              else
+                echo "Health check failed, attempt $((HEALTH_CHECK_ATTEMPTS + 1)) of $MAX_ATTEMPTS"
+                sleep 5
+                HEALTH_CHECK_ATTEMPTS=$((HEALTH_CHECK_ATTEMPTS + 1))
+              fi
+            done
+
+            if [ "$HEALTH_PASSED" = "true" ]; then
+              echo "Switching traffic to $NEW_DEPLOYMENT..."
+              
+              # Update nginx configuration to point to new deployment
+              if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+                docker cp nginx-blue.conf prompt-management-nginx:/etc/nginx/conf.d/default.conf
+              else
+                docker cp nginx-green.conf prompt-management-nginx:/etc/nginx/conf.d/default.conf
+              fi
+              
+              # Reload nginx
+              docker exec prompt-management-nginx nginx -s reload
+              
+              echo "Traffic switched to $NEW_DEPLOYMENT deployment."
+              
+              # Wait a bit before removing old deployment
+              echo "Waiting before removing old deployment..."
+              sleep 10
+              
+              echo "Removing old $OLD_DEPLOYMENT deployment..."
+              make down-$OLD_DEPLOYMENT
+              
+              echo "Deployment completed successfully!"
+            else
+              echo "Health check failed after $MAX_ATTEMPTS attempts. Reverting..."
+              make down-$NEW_DEPLOYMENT
+              exit 1
+            fi
