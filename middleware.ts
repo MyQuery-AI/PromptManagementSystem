@@ -18,6 +18,7 @@ const dynamicPublicRoutes = [
 // Define API routes that should be publicly accessible
 const publicApiRoutes = [
   "/api/auth", // All NextAuth API routes
+  "/api/health", // Health check endpoint
 ];
 
 // Define routes that should redirect to dashboard if user is already authenticated
