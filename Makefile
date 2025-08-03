@@ -144,4 +144,4 @@ status:
 	@echo "Health Status:"
 	@echo "App Blue:  $$(curl -s http://localhost:3001/api/health 2>/dev/null | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || echo 'unreachable')"
 	@echo "Database:  $$(docker compose exec -T db pg_isready -U postgres >/dev/null 2>&1 && echo 'healthy' || echo 'unhealthy')"
-	@echo "Nginx:     $$(curl -s http://localhost/nginx-health >/dev/null 2>&1 && echo 'healthy' || echo 'unhealthy')"
+	@echo "Nginx:     $$(curl -s http://localhost:3060/nginx-health >/dev/null 2>&1 && echo 'healthy' || echo 'unhealthy')"

@@ -20,6 +20,9 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
+# Create public directory if it doesn't exist (some Next.js apps don't have one)
+RUN mkdir -p ./public
+
 # Build the app
 RUN corepack enable pnpm && pnpm run build
 
@@ -34,6 +37,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy public directory (now guaranteed to exist)
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache

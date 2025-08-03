@@ -6,6 +6,7 @@ import { PrismaClient } from "./app/generated/prisma";
 const publicRoutes = [
   "/login",
   "/register",
+  "/",
   // Test page if needed publicly
 ];
 

@@ -21,6 +21,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_SECRET }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
           script: |
             cd /opt/myquery-prompt-management-system/PromptManagementSystem
             git fetch origin master
@@ -72,9 +75,9 @@ jobs:
               
               # Update nginx configuration to point to new deployment
               if [ "$NEW_DEPLOYMENT" = "blue" ]; then
-                docker cp nginx-blue.conf prompt-management-nginx:/etc/nginx/conf.d/default.conf
+                docker cp nginx-blue.conf prompt-management-nginx:/etc/nginx/nginx.conf
               else
-                docker cp nginx-green.conf prompt-management-nginx:/etc/nginx/conf.d/default.conf
+                docker cp nginx-green.conf prompt-management-nginx:/etc/nginx/nginx.conf
               fi
               
               # Reload nginx
