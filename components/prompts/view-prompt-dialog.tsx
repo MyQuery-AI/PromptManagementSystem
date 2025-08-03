@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { getPromptTypeById } from "@/lib/prompt-types";
 import { extractPromptVariables } from "@/lib/prompt-variables";
 import type { PromptResponse } from "@/actions/prompt-actions/types";
 
@@ -26,7 +25,7 @@ export function ViewPromptDialog({
 }: ViewPromptDialogProps) {
   if (!prompt) return null;
 
-  const promptType = getPromptTypeById(prompt.promptType);
+  const promptType = prompt.promptType;
   const promptVariables = extractPromptVariables(prompt.content);
 
   // Check for problematic quotations and backticks at start/end
@@ -64,26 +63,21 @@ export function ViewPromptDialog({
 
         <div className="space-y-4 py-4">
           <div className="gap-2 grid">
-            <Label className="font-medium text-sm">Feature Name</Label>
-            <div className="bg-muted p-2 rounded text-sm">{prompt.feature}</div>
-          </div>
-
-          <div className="gap-2 grid">
             <Label className="font-medium text-sm">Prompt Type</Label>
             <div className="flex items-center space-x-2">
               <Badge
                 variant="outline"
                 className={`${promptType?.bgColor || "bg-gray-100"} ${promptType?.textColor || "text-gray-800"} border-0`}
               >
-                {promptType?.icon} {promptType?.name || prompt.promptType}
+                {promptType?.icon} {promptType?.name || prompt.promptType?.name}
               </Badge>
               <span className="text-muted-foreground text-sm">
                 {promptType?.usage || "General Use"}
               </span>
             </div>
-            {promptType?.description && (
+            {promptType?.usage && (
               <div className="text-muted-foreground text-xs">
-                {promptType.description}
+                {promptType.usage}
               </div>
             )}
           </div>
