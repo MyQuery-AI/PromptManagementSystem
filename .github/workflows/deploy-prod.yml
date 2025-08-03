@@ -59,7 +59,7 @@ jobs:
             MAX_ATTEMPTS=10
 
             while [ $HEALTH_CHECK_ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-              if docker exec prompt-manager-$NEW_DEPLOYMENT curl -sSf http://localhost:3060/api/health > /dev/null; then
+              if docker exec prompt-manager-$NEW_DEPLOYMENT curl -sSf http://62.171.190.236:3060/api/health > /dev/null; then
                 echo "Health check passed for $NEW_DEPLOYMENT deployment."
                 HEALTH_PASSED=true
                 break
