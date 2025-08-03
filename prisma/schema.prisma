@@ -62,15 +62,31 @@ model UserPermission {
 }
 
 model Prompt {
-  id         Int      @id @default(autoincrement())
-  feature    String // e.g. 'generate_sql', 'explain_query'
-  promptType String   @default("sql_generation") // Type of prompt from predefined list
-  version    String   @default("v1") // prompt version
-  content    String // actual prompt content
-  isActive   Boolean  @default(true) // active version toggle
-  createdBy  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  promptTypeId String // Type of prompt foreign key
+  version      String   @default("v1") // prompt version
+  content      String // actual prompt content
+  isActive     Boolean  @default(true) // active version toggle
+  createdBy    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  promptType PromptType @relation(fields: [promptTypeId], references: [id], onDelete: Cascade)
 
   @@map("prompts")
+}
+
+model PromptType {
+  id        String   @id @default(cuid())
+  name      String   @unique // Name of the prompt type
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  color     String   @default("gray")
+  bgColor   String   @default("bg-gray-100")
+  textColor String   @default("text-gray-800")
+  usage     String   @default("General Use")
+  icon      String?  @default("📝")
+  prompts   Prompt[]
+
+  @@map("prompt_types")
 }

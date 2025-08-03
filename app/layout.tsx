@@ -8,12 +8,12 @@ import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+  : process.env.NEXTAUTH_URL!;
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: "My Query Prompt Manager",
+  description: "View, edit and manage the system prompts for My Query.",
 };
 
 const geistSans = Geist({
