@@ -1,6 +1,5 @@
 export interface CreatePromptInput {
-  feature: string;
-  promptType: string;
+  promptTypeId: string;
   version?: string;
   content: string;
   isActive?: boolean;
@@ -9,8 +8,7 @@ export interface CreatePromptInput {
 
 export interface UpdatePromptInput {
   id: number;
-  feature?: string;
-  promptType?: string;
+  promptTypeId?: string;
   version?: string;
   content?: string;
   isActive?: boolean;
@@ -19,21 +17,28 @@ export interface UpdatePromptInput {
 export interface PromptFilters {
   search?: string;
   isActive?: boolean;
-  feature?: string;
-  promptType?: string;
+  promptTypeId?: string;
   createdBy?: string;
 }
 
 export interface PromptResponse {
   id: number;
-  feature: string;
-  promptType: string;
+  promptTypeId: string;
   version: string;
   content: string;
   isActive: boolean;
   createdBy: string | null;
   createdAt: Date;
   updatedAt: Date;
+  promptType?: {
+    id: string;
+    name: string;
+    color: string;
+    bgColor: string;
+    textColor: string;
+    usage: string;
+    icon: string | null;
+  };
 }
 
 export interface PromptActionResult<T = any> {

@@ -121,7 +121,6 @@ export function PromptActions({
   const handleExport = () => {
     const exportData = {
       id: prompt.id,
-      feature: prompt.feature,
       version: prompt.version,
       content: prompt.content,
       isActive: prompt.isActive,
@@ -136,7 +135,7 @@ export function PromptActions({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `prompt-${prompt.feature}-${prompt.version}.json`;
+    a.download = `prompt-${prompt.promptType}-${prompt.version}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

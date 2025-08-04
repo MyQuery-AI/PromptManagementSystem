@@ -10,6 +10,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   session: {
     strategy: "jwt",
   },
@@ -64,7 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               name: user.name || "",
               password: randomPassword, // OAuth users get a random hashed password
               emailConfirmed: true, // OAuth emails are pre-verified
-              role: "Developer", // Default role for new users
+              role: "Owner", // Default role for new users
             },
           });
 

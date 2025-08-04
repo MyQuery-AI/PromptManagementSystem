@@ -1,0 +1,15 @@
+services:
+  prompt-manager-blue:
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+    command: pnpm dev --port 3001
+    ports:
+      - "3001:3001"
+
+  nginx:
+    ports:
+      - "3060:80"
