@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { getPromptTypeById } from "@/lib/prompt-types";
 import { extractPromptVariables } from "@/lib/prompt-variables";
 import type { PromptResponse } from "@/actions/prompt-actions/types";
 
@@ -25,7 +26,7 @@ export function ViewPromptDialog({
 }: ViewPromptDialogProps) {
   if (!prompt) return null;
 
-  const promptType = prompt.promptType;
+  const promptType = getPromptTypeById(prompt.promptType);
   const promptVariables = extractPromptVariables(prompt.content);
 
   // Check for problematic quotations and backticks at start/end
