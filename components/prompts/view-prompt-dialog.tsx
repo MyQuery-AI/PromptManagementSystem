@@ -26,7 +26,7 @@ export function ViewPromptDialog({
 }: ViewPromptDialogProps) {
   if (!prompt) return null;
 
-  const promptType = getPromptTypeById(prompt.promptType);
+  const promptType = getPromptTypeById(prompt.promptTypeId);
   const promptVariables = extractPromptVariables(prompt.content);
 
   // Check for problematic quotations and backticks at start/end
