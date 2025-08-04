@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PromptActions } from "./prompt-actions";
-import { getPromptTypeById } from "@/lib/prompt-types";
 import type { PromptResponse } from "@/actions/prompt-actions/types";
 
 interface PromptsTableProps {
@@ -31,8 +30,7 @@ export function PromptsTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">ID</TableHead>
-              <TableHead className="min-w-[180px]">Feature</TableHead>
-              <TableHead className="w-[160px]">Type & Usage</TableHead>
+              <TableHead className="w-[160px]">Type</TableHead>
               <TableHead className="w-[100px]">Version</TableHead>
               <TableHead className="w-[100px]">Status</TableHead>
               <TableHead className="w-[150px]">Created By</TableHead>
@@ -42,7 +40,7 @@ export function PromptsTable({
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 No prompts found.
               </TableCell>
             </TableRow>
@@ -58,8 +56,7 @@ export function PromptsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[80px]">ID</TableHead>
-            <TableHead className="min-w-[180px]">Feature</TableHead>
-            <TableHead className="w-[160px]">Type & Usage</TableHead>
+            <TableHead className="w-[160px]">Type</TableHead>
             <TableHead className="w-[100px]">Version</TableHead>
             <TableHead className="w-[100px]">Status</TableHead>
             <TableHead className="w-[150px]">Created By</TableHead>
@@ -69,29 +66,20 @@ export function PromptsTable({
         </TableHeader>
         <TableBody>
           {prompts.map((prompt) => {
-            const promptType = getPromptTypeById(prompt.promptType);
-
             return (
               <TableRow key={prompt.id}>
                 <TableCell className="font-medium">#{prompt.id}</TableCell>
                 <TableCell>
                   <div className="space-y-1">
-                    <div className="font-medium">{prompt.feature}</div>
-                    <div className="text-muted-foreground text-sm line-clamp-2">
-                      {prompt.content}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
                     <Badge
                       variant="outline"
-                      className={`${promptType?.bgColor || "bg-gray-100"} ${promptType?.textColor || "text-gray-800"} border-0`}
+                      className={`${prompt.promptType?.bgColor || "bg-gray-100"} ${prompt.promptType?.textColor || "text-gray-800"} border-0`}
                     >
-                      {promptType?.icon} {promptType?.name || prompt.promptType}
+                      {prompt.promptType?.icon}{" "}
+                      {prompt.promptType?.name || "Unknown"}
                     </Badge>
                     <div className="text-muted-foreground text-xs">
-                      {promptType?.usage || "General Use"}
+                      {prompt.promptType?.usage || "General Use"}
                     </div>
                   </div>
                 </TableCell>

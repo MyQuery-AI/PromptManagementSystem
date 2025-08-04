@@ -1,0 +1,11 @@
+# Public Directory
+
+This directory contains static assets that will be served directly by Next.js.
+Files in this directory are served from the root path `/`.
+
+For example:
+
+- `public/logo.png` will be served at `/logo.png`
+- `public/images/hero.jpg` will be served at `/images/hero.jpg`
+
+Note: In Next.js 13+ with the App Router, favicons should be placed in the `app` directory as `favicon.ico`.

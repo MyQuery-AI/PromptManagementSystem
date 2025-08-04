@@ -23,9 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { createPrompt, updatePrompt } from "@/actions/prompt-actions";
-import { PROMPT_TYPES, getPromptTypeById } from "@/lib/prompt-types";
+import { getAllPromptTypes } from "@/actions/prompt-type-actions";
+import type { PromptTypeResponse } from "@/actions/prompt-type-actions";
 import { extractPromptVariables } from "@/lib/prompt-variables";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import type {
   PromptResponse,
   CreatePromptInput,
@@ -65,14 +69,21 @@ export function PromptFormDialog({
   prompt,
   mode,
 }: PromptFormDialogProps) {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [promptTypes, setPromptTypes] = useState<PromptTypeResponse[]>([]);
+  const [isLoadingTypes, setIsLoadingTypes] = useState(true);
   const formRef = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
-    feature: prompt?.feature || "",
-    promptType: prompt?.promptType || "sql_generation",
+    promptTypeId:
+      prompt?.promptTypeId || (promptTypes.length > 0 ? promptTypes[0].id : ""),
     content: prompt?.content || "",
     isActive: prompt?.isActive ?? true,
   });
+  // Helper function to get prompt type by ID
+  const getPromptTypeById = (id: string) => {
+    return promptTypes.find((type) => type.id === id);
+  };
 
   // Calculate the display version based on mode
   const displayVersion =
@@ -125,14 +136,36 @@ export function PromptFormDialog({
   useEffect(() => {
     if (open) {
       setFormData({
-        feature: prompt?.feature || "",
-        promptType: prompt?.promptType || "sql_generation",
+        promptTypeId:
+          prompt?.promptTypeId ||
+          (promptTypes.length > 0 ? promptTypes[0].id : ""),
         content: prompt?.content || "",
         isActive: prompt?.isActive ?? true,
       });
       setIgnoreQuoteWarning(false); // Reset quote warning when dialog opens
     }
-  }, [open, prompt]);
+  }, [open, prompt, promptTypes]);
+
+  // Fetch prompt types when component mounts
+  useEffect(() => {
+    const fetchPromptTypes = async () => {
+      setIsLoadingTypes(true);
+      try {
+        const result = await getAllPromptTypes();
+        if (result.success && result.data) {
+          setPromptTypes(result.data);
+        } else {
+          toast.error("Failed to fetch prompt types");
+        }
+      } catch (error) {
+        toast.error("Error loading prompt types");
+      } finally {
+        setIsLoadingTypes(false);
+      }
+    };
+
+    fetchPromptTypes();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,12 +174,11 @@ export function PromptFormDialog({
     try {
       if (mode === "create") {
         const createData: CreatePromptInput = {
-          feature: formData.feature,
-          promptType: formData.promptType,
+          promptTypeId: formData.promptTypeId,
           version: "v1", // Always start with v1 for new prompts
           content: formData.content,
           isActive: formData.isActive,
-          createdBy: "current-user@example.com", // This should come from auth
+          createdBy: session?.user?.email || "unknown",
         };
 
         const result = await createPrompt(createData);
@@ -160,8 +192,7 @@ export function PromptFormDialog({
       } else if (mode === "edit" && prompt) {
         const updateData: UpdatePromptInput = {
           id: prompt.id,
-          feature: formData.feature,
-          promptType: formData.promptType,
+          promptTypeId: formData.promptTypeId,
           version: displayVersion, // Use the auto-calculated next version
           content: formData.content,
           isActive: formData.isActive,
@@ -184,8 +215,7 @@ export function PromptFormDialog({
 
   const resetForm = () => {
     setFormData({
-      feature: "",
-      promptType: "sql_generation",
+      promptTypeId: promptTypes.length > 0 ? promptTypes[0].id : "",
       content: "",
       isActive: true,
     });
@@ -218,50 +248,52 @@ export function PromptFormDialog({
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             <div className="gap-4 grid py-4">
               <div className="gap-2 grid">
-                <Label htmlFor="feature">Feature Name</Label>
-                <Input
-                  id="feature"
-                  value={formData.feature}
-                  onChange={(e) =>
-                    setFormData({ ...formData, feature: e.target.value })
-                  }
-                  placeholder="e.g., generate_sql, explain_query"
-                  required
-                />
-                <span className="text-muted-foreground text-xs">
-                  Keep the name as close to the original prompt name as possible
-                </span>
-              </div>
-
-              <div className="gap-2 grid">
                 <Label htmlFor="promptType">Prompt Type</Label>
                 <Select
-                  value={formData.promptType}
+                  value={formData.promptTypeId}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, promptType: value })
+                    setFormData({ ...formData, promptTypeId: value })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select prompt type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {PROMPT_TYPES.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
-                        <div className="flex items-center space-x-2">
-                          <span>{type.icon}</span>
-                          <div>
-                            <div className="font-medium">{type.name}</div>
-                            <div className="text-muted-foreground text-xs">
-                              {type.usage}
-                            </div>
-                          </div>
-                        </div>
+                    {isLoadingTypes ? (
+                      <SelectItem value="" disabled>
+                        Loading prompt types...
                       </SelectItem>
-                    ))}
+                    ) : (
+                      <>
+                        {promptTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            <div className="flex items-center space-x-2">
+                              <span>{type.icon}</span>
+                              <div>
+                                <div className="font-medium">{type.name}</div>
+                                <div className="text-muted-foreground text-xs">
+                                  {type.usage}
+                                </div>
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <div className="border-t my-1" />
+                        <Link
+                          href="/prompt-types"
+                          onClick={() => onOpenChange(false)}
+                        >
+                          <div className="flex items-center space-x-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-sm">
+                            <Plus className="w-4 h-4" />
+                            <span>Create new prompt type</span>
+                          </div>
+                        </Link>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
                 {(() => {
-                  const selectedType = getPromptTypeById(formData.promptType);
+                  const selectedType = getPromptTypeById(formData.promptTypeId);
                   return selectedType ? (
                     <div className="flex items-center space-x-2 mt-1">
                       <Badge

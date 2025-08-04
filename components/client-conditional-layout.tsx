@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { Sidebar, SidebarLayout } from "@/components/ui/sidebar";
-import { FileText, Users, Settings, BarChart } from "lucide-react";
+import { FileText, Users, Settings, BarChart, Tags } from "lucide-react";
+import { SessionProvider } from "next-auth/react";
 
 interface SidebarItem {
   title: string;
@@ -21,6 +22,12 @@ const baseSidebarItems: SidebarItem[] = [
     title: "Prompts",
     href: "/prompts",
     icon: <FileText className="w-4 h-4" />,
+  },
+  {
+    title: "Prompt Types",
+    href: "/prompt-types",
+    icon: <Tags className="w-4 h-4" />,
+    requiresRole: "Admin", // Only Admins and Owners can manage prompt types
   },
   {
     title: "Users",
@@ -71,8 +78,10 @@ export function ClientConditionalLayout({
 
   // Render with filtered sidebar based on user role
   return (
-    <SidebarLayout sidebar={<Sidebar items={filteredSidebarItems} />}>
-      {children}
-    </SidebarLayout>
+    <SessionProvider>
+      <SidebarLayout sidebar={<Sidebar items={filteredSidebarItems} />}>
+        {children}
+      </SidebarLayout>
+    </SessionProvider>
   );
 }

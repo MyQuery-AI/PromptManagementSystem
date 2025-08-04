@@ -1,0 +1,130 @@
+name: 🚀 Production Deploy on Push
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: prod-group
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Production Blue-Green with Health Check
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_SECRET }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
+          script: |
+            cd /opt/myquery-prompt-management-system/PromptManagementSystem
+            git fetch origin master
+            git checkout master
+            git reset --hard origin/master
+            git rev-parse --abbrev-ref HEAD
+            git log --oneline -1
+
+            # Determine current active deployment by checking which container is running
+            if docker ps --format "table {{.Names}}" | grep -q "prompt-manager-blue"; then
+              CURRENT_DEPLOYMENT="blue"
+              NEW_DEPLOYMENT="green"
+              OLD_DEPLOYMENT="blue"
+            else
+              CURRENT_DEPLOYMENT="green"
+              NEW_DEPLOYMENT="blue"
+              OLD_DEPLOYMENT="green"
+            fi
+
+            echo "Current deployment: $CURRENT_DEPLOYMENT"
+            echo "Deploying new version to: $NEW_DEPLOYMENT"
+
+            # Deploy new version
+            echo "Deploying $NEW_DEPLOYMENT..."
+            make deploy-$NEW_DEPLOYMENT
+
+            echo "Waiting for app to start..."
+            sleep 15
+
+            # Health check with retry logic on the new container directly
+            echo "Checking health of new $NEW_DEPLOYMENT container..."
+            HEALTH_CHECK_ATTEMPTS=0
+            MAX_ATTEMPTS=10
+
+            while [ $HEALTH_CHECK_ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+              # Check if container is running and healthy by testing the port
+              if docker exec prompt-manager-$NEW_DEPLOYMENT wget -q --spider http://127.0.0.1:3001/api/health 2>/dev/null; then
+                echo "Health check passed for $NEW_DEPLOYMENT!"
+                HEALTH_PASSED=true
+                break
+              else
+                HEALTH_CHECK_ATTEMPTS=$((HEALTH_CHECK_ATTEMPTS + 1))
+                echo "Health check attempt $HEALTH_CHECK_ATTEMPTS/$MAX_ATTEMPTS failed, retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if [ "$HEALTH_PASSED" != "true" ]; then
+              echo "Health check failed after $MAX_ATTEMPTS attempts. Rolling back..."
+              make down-$NEW_DEPLOYMENT
+              exit 1
+            fi
+
+            echo "Switching traffic to $NEW_DEPLOYMENT..."
+
+            # Wait a bit more to ensure container is fully ready
+            echo "Waiting for container to be fully ready..."
+            sleep 5
+
+            # Update system nginx configuration to point to new deployment
+            if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+              # Copy blue configuration and reload nginx
+              sudo cp admin-blue.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+            else
+              # Copy green configuration and reload nginx
+              sudo cp admin-green.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+            fi
+
+            # Test and reload nginx configuration
+            sudo nginx -t && sudo systemctl reload nginx
+
+            # Verify system nginx is working with new configuration
+            sleep 3
+            if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+              HEALTH_PORT=3060
+            else
+              HEALTH_PORT=3061
+            fi
+
+            if curl -f http://localhost:$HEALTH_PORT/api/health > /dev/null 2>&1; then
+              echo "System nginx is healthy with new $NEW_DEPLOYMENT configuration"
+            else
+              echo "System nginx health check failed, rolling back..."
+              # Rollback nginx config
+              if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+                sudo cp admin-green.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+              else
+                sudo cp admin-blue.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+              fi
+              sudo systemctl reload nginx
+              make down-$NEW_DEPLOYMENT
+              exit 1
+            fi
+
+            echo "Traffic switched to $NEW_DEPLOYMENT deployment."
+
+            # Wait a bit before removing old deployment
+            echo "Waiting before removing old deployment..."
+            sleep 10
+
+            echo "Removing old $OLD_DEPLOYMENT deployment..."
+            make down-$OLD_DEPLOYMENT
+
+            echo "Deployment completed successfully!"
