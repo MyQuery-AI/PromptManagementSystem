@@ -53,29 +53,67 @@ jobs:
             echo "Waiting for app to start..."
             sleep 15
 
-            # Health check with retry logic
-            echo "Checking health..."
+            # Health check with retry logic on the new container directly
+            echo "Checking health of new $NEW_DEPLOYMENT container..."
             HEALTH_CHECK_ATTEMPTS=0
             MAX_ATTEMPTS=10
+
+            while [ $HEALTH_CHECK_ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+              # Check if container is running and healthy by testing the port
+              if docker exec prompt-manager-$NEW_DEPLOYMENT wget -q --spider http://127.0.0.1:3001/api/health 2>/dev/null; then
+                echo "Health check passed for $NEW_DEPLOYMENT!"
+                HEALTH_PASSED=true
+                break
+              else
+                HEALTH_CHECK_ATTEMPTS=$((HEALTH_CHECK_ATTEMPTS + 1))
+                echo "Health check attempt $HEALTH_CHECK_ATTEMPTS/$MAX_ATTEMPTS failed, retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if [ "$HEALTH_PASSED" != "true" ]; then
+              echo "Health check failed after $MAX_ATTEMPTS attempts. Rolling back..."
+              make down-$NEW_DEPLOYMENT
+              exit 1
+            fi
+
             echo "Switching traffic to $NEW_DEPLOYMENT..."
-            
+
+            # Wait a bit more to ensure container is fully ready
+            echo "Waiting for container to be fully ready..."
+            sleep 5
+
             # Update nginx configuration to point to new deployment
             if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+              # Update both the container and the repository file
+              cp nginx-blue.conf nginx.conf
               docker cp nginx-blue.conf prompt-management-nginx:/etc/nginx/nginx.conf
             else
+              # Update both the container and the repository file
+              cp nginx-green.conf nginx.conf
               docker cp nginx-green.conf prompt-management-nginx:/etc/nginx/nginx.conf
             fi
-            
-            # Reload nginx
+
+            # Reload nginx configuration
             docker exec prompt-management-nginx nginx -s reload
-            
+
+            # Verify nginx is running with new config
+            sleep 3
+            if curl -f http://localhost:3060/nginx-health > /dev/null 2>&1; then
+              echo "Nginx is healthy with new configuration"
+            else
+              echo "Nginx health check failed, rolling back..."
+              make down-$NEW_DEPLOYMENT
+              exit 1
+            fi
+
             echo "Traffic switched to $NEW_DEPLOYMENT deployment."
-            
+
             # Wait a bit before removing old deployment
             echo "Waiting before removing old deployment..."
             sleep 10
-            
+
             echo "Removing old $OLD_DEPLOYMENT deployment..."
             make down-$OLD_DEPLOYMENT
-            
+
             echo "Deployment completed successfully!"
