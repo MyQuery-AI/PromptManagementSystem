@@ -83,26 +83,37 @@ jobs:
             echo "Waiting for container to be fully ready..."
             sleep 5
 
-            # Update nginx configuration to point to new deployment
+            # Update system nginx configuration to point to new deployment
             if [ "$NEW_DEPLOYMENT" = "blue" ]; then
-              # Update both the container and the repository file
-              cp nginx-blue.conf nginx.conf
-              docker cp nginx-blue.conf prompt-management-nginx:/etc/nginx/nginx.conf
+              # Copy blue configuration and reload nginx
+              sudo cp admin-blue.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
             else
-              # Update both the container and the repository file
-              cp nginx-green.conf nginx.conf
-              docker cp nginx-green.conf prompt-management-nginx:/etc/nginx/nginx.conf
+              # Copy green configuration and reload nginx
+              sudo cp admin-green.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
             fi
 
-            # Reload nginx configuration
-            docker exec prompt-management-nginx nginx -s reload
+            # Test and reload nginx configuration
+            sudo nginx -t && sudo systemctl reload nginx
 
-            # Verify nginx is running with new config
+            # Verify system nginx is working with new configuration
             sleep 3
-            if curl -f http://localhost:3060/nginx-health > /dev/null 2>&1; then
-              echo "Nginx is healthy with new configuration"
+            if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+              HEALTH_PORT=3060
             else
-              echo "Nginx health check failed, rolling back..."
+              HEALTH_PORT=3061
+            fi
+
+            if curl -f http://localhost:$HEALTH_PORT/api/health > /dev/null 2>&1; then
+              echo "System nginx is healthy with new $NEW_DEPLOYMENT configuration"
+            else
+              echo "System nginx health check failed, rolling back..."
+              # Rollback nginx config
+              if [ "$NEW_DEPLOYMENT" = "blue" ]; then
+                sudo cp admin-green.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+              else
+                sudo cp admin-blue.myquery.ai /etc/nginx/sites-available/admin.myquery.ai
+              fi
+              sudo systemctl reload nginx
               make down-$NEW_DEPLOYMENT
               exit 1
             fi
