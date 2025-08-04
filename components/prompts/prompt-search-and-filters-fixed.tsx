@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -42,7 +35,7 @@ export function PromptSearchAndFilters({
   const [statusSearchTerm, setStatusSearchTerm] = useState("");
 
   const isOwner = userRole === "Owner";
-  const hasCreatePermission = isOwner; // Add more permission logic here
+  const hasCreatePermission = isOwner;
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -51,12 +44,12 @@ export function PromptSearchAndFilters({
 
   const handleStatusFilter = (isActive: boolean | undefined) => {
     onFiltersChange({ ...filters, isActive });
-    setStatusSearchTerm(""); // Reset search when filter is applied
+    setStatusSearchTerm("");
   };
 
   const handlePromptTypeFilter = (promptType: string | undefined) => {
     onFiltersChange({ ...filters, promptType });
-    setTypeSearchTerm(""); // Reset search when filter is applied
+    setTypeSearchTerm("");
   };
 
   const clearFilters = () => {
@@ -66,28 +59,23 @@ export function PromptSearchAndFilters({
     onFiltersChange({});
   };
 
-  const filteredPromptTypes = PROMPT_TYPES.filter(
-    (type) =>
-      type.name.toLowerCase().includes(typeSearchTerm.toLowerCase()) ||
-      type.description.toLowerCase().includes(typeSearchTerm.toLowerCase())
+  // Filter prompt types based on search term
+  const filteredPromptTypes = PROMPT_TYPES.filter((type) =>
+    type.name.toLowerCase().includes(typeSearchTerm.toLowerCase()) ||
+    type.description.toLowerCase().includes(typeSearchTerm.toLowerCase())
   );
 
   // Status options for filtering
   const statusOptions = [
-    {
-      value: undefined,
-      label: "All Status",
-      description: "Show all prompts",
-    },
+    { value: undefined, label: "All Status", description: "Show all prompts" },
     { value: true, label: "Active", description: "Only active prompts" },
     { value: false, label: "Inactive", description: "Only inactive prompts" },
   ];
 
   // Filter status options based on search term
-  const filteredStatusOptions = statusOptions.filter(
-    (option) =>
-      option.label.toLowerCase().includes(statusSearchTerm.toLowerCase()) ||
-      option.description.toLowerCase().includes(statusSearchTerm.toLowerCase())
+  const filteredStatusOptions = statusOptions.filter((option) =>
+    option.label.toLowerCase().includes(statusSearchTerm.toLowerCase()) ||
+    option.description.toLowerCase().includes(statusSearchTerm.toLowerCase())
   );
 
   const hasActiveFilters =
@@ -102,7 +90,7 @@ export function PromptSearchAndFilters({
     <div className="space-y-4">
       <div className="flex sm:flex-row flex-col justify-between items-start sm:items-center gap-4">
         {/* Search and Filters Row */}
-        <div className="flex flex-wrap flex-1 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
           <div className="relative flex-1 min-w-[240px] max-w-md">
             <Search className="top-2.5 left-2 absolute w-4 h-4 text-muted-foreground" />
             <Input
@@ -116,7 +104,7 @@ export function PromptSearchAndFilters({
           {/* Status Filter Dropdown with Search */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="justify-between w-[120px]">
+              <Button variant="outline" className="w-[120px] justify-between">
                 <span>
                   {filters.isActive === undefined
                     ? "All Status"
@@ -124,7 +112,7 @@ export function PromptSearchAndFilters({
                       ? "Active"
                       : "Inactive"}
                 </span>
-                <ChevronDown className="opacity-50 w-4 h-4" />
+                <ChevronDown className="w-4 h-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[180px]">
@@ -154,7 +142,7 @@ export function PromptSearchAndFilters({
                 </DropdownMenuItem>
               ))}
               {filteredStatusOptions.length === 0 && statusSearchTerm && (
-                <div className="px-2 py-6 text-muted-foreground text-sm text-center">
+                <div className="px-2 py-6 text-center text-muted-foreground text-sm">
                   No status found
                 </div>
               )}
@@ -164,28 +152,22 @@ export function PromptSearchAndFilters({
           {/* Type Filter Dropdown with Search */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="justify-between w-[160px]">
+              <Button variant="outline" className="w-[160px] justify-between">
                 <span className="flex items-center space-x-2">
-                  {filters.promptTypeId ? (
+                  {filters.promptType ? (
                     <>
                       <span>
-                        {
-                          promptTypes.find((t) => t.id === filters.promptTypeId)
-                            ?.icon
-                        }
+                        {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.icon}
                       </span>
                       <span>
-                        {
-                          promptTypes.find((t) => t.id === filters.promptTypeId)
-                            ?.name
-                        }
+                        {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.name}
                       </span>
                     </>
                   ) : (
                     <span>All Types</span>
                   )}
                 </span>
-                <ChevronDown className="opacity-50 w-4 h-4" />
+                <ChevronDown className="w-4 h-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[200px]">
@@ -202,7 +184,7 @@ export function PromptSearchAndFilters({
               </div>
               <DropdownMenuItem
                 onClick={() => handlePromptTypeFilter(undefined)}
-                className={`${!filters.promptTypeId ? "bg-accent" : ""}`}
+                className={`${!filters.promptType ? "bg-accent" : ""}`}
               >
                 All Types
               </DropdownMenuItem>
@@ -210,7 +192,7 @@ export function PromptSearchAndFilters({
                 <DropdownMenuItem
                   key={type.id}
                   onClick={() => handlePromptTypeFilter(type.id)}
-                  className={`${filters.promptTypeId === type.id ? "bg-accent" : ""}`}
+                  className={`${filters.promptType === type.id ? "bg-accent" : ""}`}
                 >
                   <div className="flex items-center space-x-2">
                     <span>{type.icon}</span>
@@ -224,7 +206,7 @@ export function PromptSearchAndFilters({
                 </DropdownMenuItem>
               ))}
               {filteredPromptTypes.length === 0 && typeSearchTerm && (
-                <div className="px-2 py-6 text-muted-foreground text-sm text-center">
+                <div className="px-2 py-6 text-center text-muted-foreground text-sm">
                   No types found
                 </div>
               )}

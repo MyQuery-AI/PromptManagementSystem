@@ -55,6 +55,10 @@ export async function getPrompts(
             name: { contains: filters.search, mode: "insensitive" },
           },
         },
+        { feature: { contains: filters.search, mode: "insensitive" } },
+        { content: { contains: filters.search, mode: "insensitive" } },
+        { createdBy: { contains: filters.search, mode: "insensitive" } },
+        { promptType: { contains: filters.search, mode: "insensitive" } },
       ];
     }
 
@@ -64,6 +68,13 @@ export async function getPrompts(
 
     if (filters?.promptTypeId) {
       where.promptTypeId = filters.promptTypeId;
+    }
+    if (filters?.feature) {
+      where.feature = filters.feature;
+    }
+
+    if (filters?.promptType) {
+      where.promptType = filters.promptType;
     }
 
     if (filters?.createdBy) {
@@ -175,6 +186,7 @@ export async function createPrompt(
     const prompt = await prisma.prompt.create({
       data: {
         promptTypeId: input.promptTypeId,
+        feature: input.feature,
         version: input.version || "v1",
         content: input.content,
         isActive: input.isActive ?? true,
@@ -243,6 +255,9 @@ export async function updatePrompt(
 
     if (input.promptTypeId !== undefined)
       updateData.promptTypeId = input.promptTypeId;
+    if (input.feature !== undefined) updateData.feature = input.feature;
+    if (input.promptType !== undefined)
+      updateData.promptType = input.promptType;
     if (input.version !== undefined) updateData.version = input.version;
     if (input.content !== undefined) updateData.content = input.content;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
@@ -393,7 +408,8 @@ export async function togglePromptStatus(
  * Duplicate a prompt
  */
 export async function duplicatePrompt(
-  id: number
+  id: number,
+  newFeature?: string
 ): Promise<PromptActionResult<PromptResponse>> {
   try {
     // Check authentication
@@ -432,6 +448,7 @@ export async function duplicatePrompt(
     const prompt = await prisma.prompt.create({
       data: {
         promptTypeId: existingPrompt.promptTypeId,
+        feature: newFeature || `${existingPrompt.feature}_copy`,
         version: "v1",
         content: existingPrompt.content,
         isActive: false, // Start as inactive for review

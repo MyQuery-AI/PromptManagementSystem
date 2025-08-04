@@ -25,11 +25,12 @@ import { Badge } from "@/components/ui/badge";
 import { createPrompt, updatePrompt } from "@/actions/prompt-actions";
 import { getAllPromptTypes } from "@/actions/prompt-type-actions";
 import type { PromptTypeResponse } from "@/actions/prompt-type-actions";
-import { extractPromptVariables } from "@/lib/prompt-variables";
-import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { PROMPT_TYPES, getPromptTypeById } from "@/lib/prompt-types";
+import { extractPromptVariables } from "@/lib/prompt-variables";
+import { toast } from "sonner";
 import type {
   PromptResponse,
   CreatePromptInput,
@@ -70,11 +71,10 @@ export function PromptFormDialog({
   mode,
 }: PromptFormDialogProps) {
   const { data: session } = useSession();
-  const [isLoading, setIsLoading] = useState(false);
   const [promptTypes, setPromptTypes] = useState<PromptTypeResponse[]>([]);
   const [isLoadingTypes, setIsLoadingTypes] = useState(true);
-  const formRef = useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState({
+    feature: prompt?.feature || "",
     promptTypeId:
       prompt?.promptTypeId || (promptTypes.length > 0 ? promptTypes[0].id : ""),
     content: prompt?.content || "",
@@ -84,6 +84,8 @@ export function PromptFormDialog({
   const getPromptTypeById = (id: string) => {
     return promptTypes.find((type) => type.id === id);
   };
+  const [isLoading, setIsLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // Calculate the display version based on mode
   const displayVersion =
@@ -132,20 +134,6 @@ export function PromptFormDialog({
   const showQuoteWarning =
     hasProblematicQuotes(formData.content) && !ignoreQuoteWarning;
 
-  // Reset form when prompt changes or dialog opens
-  useEffect(() => {
-    if (open) {
-      setFormData({
-        promptTypeId:
-          prompt?.promptTypeId ||
-          (promptTypes.length > 0 ? promptTypes[0].id : ""),
-        content: prompt?.content || "",
-        isActive: prompt?.isActive ?? true,
-      });
-      setIgnoreQuoteWarning(false); // Reset quote warning when dialog opens
-    }
-  }, [open, prompt, promptTypes]);
-
   // Fetch prompt types when component mounts
   useEffect(() => {
     const fetchPromptTypes = async () => {
@@ -175,6 +163,7 @@ export function PromptFormDialog({
       if (mode === "create") {
         const createData: CreatePromptInput = {
           promptTypeId: formData.promptTypeId,
+          feature: formData.feature,
           version: "v1", // Always start with v1 for new prompts
           content: formData.content,
           isActive: formData.isActive,
@@ -193,6 +182,7 @@ export function PromptFormDialog({
         const updateData: UpdatePromptInput = {
           id: prompt.id,
           promptTypeId: formData.promptTypeId,
+          feature: formData.feature,
           version: displayVersion, // Use the auto-calculated next version
           content: formData.content,
           isActive: formData.isActive,
@@ -216,6 +206,7 @@ export function PromptFormDialog({
   const resetForm = () => {
     setFormData({
       promptTypeId: promptTypes.length > 0 ? promptTypes[0].id : "",
+      feature: "",
       content: "",
       isActive: true,
     });
@@ -278,12 +269,12 @@ export function PromptFormDialog({
                             </div>
                           </SelectItem>
                         ))}
-                        <div className="border-t my-1" />
+                        <div className="my-1 border-t" />
                         <Link
                           href="/prompt-types"
                           onClick={() => onOpenChange(false)}
                         >
-                          <div className="flex items-center space-x-2 px-2 py-1.5 text-sm cursor-pointer hover:bg-gray-100 rounded-sm">
+                          <div className="flex items-center space-x-2 hover:bg-gray-100 px-2 py-1.5 rounded-sm text-sm cursor-pointer">
                             <Plus className="w-4 h-4" />
                             <span>Create new prompt type</span>
                           </div>
@@ -308,6 +299,22 @@ export function PromptFormDialog({
                     </div>
                   ) : null;
                 })()}
+              </div>
+
+              <div className="gap-2 grid">
+                <Label htmlFor="feature">Feature Name</Label>
+                <Input
+                  id="feature"
+                  value={formData.feature}
+                  onChange={(e) =>
+                    setFormData({ ...formData, feature: e.target.value })
+                  }
+                  placeholder="Enter the feature name..."
+                  required
+                />
+                <span className="text-muted-foreground text-xs">
+                  A descriptive name for the feature this prompt is used for
+                </span>
               </div>
 
               <div className="gap-2 grid">
