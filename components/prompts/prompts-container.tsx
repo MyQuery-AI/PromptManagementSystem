@@ -12,10 +12,12 @@ import { PromptsTable } from "./prompts-table";
 import { PromptSearchAndFilters } from "./prompt-search-and-filters";
 import { PromptFormDialog } from "./prompt-form-dialog";
 import { ViewPromptDialog } from "./view-prompt-dialog";
+import { getAllPromptTypes } from "@/actions/prompt-type-actions";
 import type {
   PromptResponse,
   PromptFilters,
 } from "@/actions/prompt-actions/types";
+import type { PromptTypeResponse } from "@/actions/prompt-type-actions/types";
 
 interface PromptsContainerProps {
   initialPrompts: PromptResponse[];
@@ -28,6 +30,7 @@ export function PromptsContainer({
 }: PromptsContainerProps) {
   const [prompts, setPrompts] = useState<PromptResponse[]>(initialPrompts);
   const [filters, setFilters] = useState<PromptFilters>({});
+  const [promptTypes, setPromptTypes] = useState<PromptTypeResponse[]>([]);
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -37,12 +40,22 @@ export function PromptsContainer({
     null
   );
 
+  // Fetch prompt types on mount
+  useEffect(() => {
+    const fetchPromptTypes = async () => {
+      const result = await getAllPromptTypes();
+      if (result.success && result.data) {
+        setPromptTypes(result.data);
+      }
+    };
+    fetchPromptTypes();
+  }, []);
+
   // Filter prompts based on current filters
   const filteredPrompts = prompts.filter((prompt) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const matchesSearch =
-        prompt.feature.toLowerCase().includes(searchLower) ||
         prompt.content.toLowerCase().includes(searchLower) ||
         (prompt.createdBy &&
           prompt.createdBy.toLowerCase().includes(searchLower));
@@ -57,11 +70,7 @@ export function PromptsContainer({
       return false;
     }
 
-    if (filters.feature && prompt.feature !== filters.feature) {
-      return false;
-    }
-
-    if (filters.promptType && prompt.promptType !== filters.promptType) {
+    if (filters.promptTypeId && prompt.promptTypeId !== filters.promptTypeId) {
       return false;
     }
 
@@ -109,6 +118,7 @@ export function PromptsContainer({
             onFiltersChange={setFilters}
             onCreateNew={handleCreateNew}
             userRole={userRole}
+            promptTypes={promptTypes}
           />
         </CardHeader>
 

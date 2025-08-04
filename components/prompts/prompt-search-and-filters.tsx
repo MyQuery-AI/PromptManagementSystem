@@ -18,14 +18,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PROMPT_TYPES } from "@/lib/prompt-types";
 import type { PromptFilters } from "@/actions/prompt-actions/types";
+import type { PromptTypeResponse } from "@/actions/prompt-type-actions/types";
 
 interface PromptSearchAndFiltersProps {
   filters: PromptFilters;
   onFiltersChange: (filters: PromptFilters) => void;
   onCreateNew?: () => void;
   userRole: string;
+  promptTypes: PromptTypeResponse[];
 }
 
 export function PromptSearchAndFilters({
@@ -33,6 +34,7 @@ export function PromptSearchAndFilters({
   onFiltersChange,
   onCreateNew,
   userRole,
+  promptTypes,
 }: PromptSearchAndFiltersProps) {
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const [typeSearchTerm, setTypeSearchTerm] = useState("");
@@ -51,8 +53,8 @@ export function PromptSearchAndFilters({
     setStatusSearchTerm(""); // Reset search when filter is applied
   };
 
-  const handlePromptTypeFilter = (promptType: string | undefined) => {
-    onFiltersChange({ ...filters, promptType });
+  const handlePromptTypeFilter = (promptTypeId: string | undefined) => {
+    onFiltersChange({ ...filters, promptTypeId });
     setTypeSearchTerm(""); // Reset search when filter is applied
   };
 
@@ -64,10 +66,10 @@ export function PromptSearchAndFilters({
   };
 
   // Filter prompt types based on search term
-  const filteredPromptTypes = PROMPT_TYPES.filter(
+  const filteredPromptTypes = promptTypes.filter(
     (type) =>
       type.name.toLowerCase().includes(typeSearchTerm.toLowerCase()) ||
-      type.description.toLowerCase().includes(typeSearchTerm.toLowerCase())
+      type.usage.toLowerCase().includes(typeSearchTerm.toLowerCase())
   );
 
   // Status options for filtering
@@ -87,8 +89,7 @@ export function PromptSearchAndFilters({
   const hasActiveFilters =
     filters.search ||
     filters.isActive !== undefined ||
-    filters.feature ||
-    filters.promptType ||
+    filters.promptTypeId ||
     filters.createdBy;
 
   return (
@@ -159,17 +160,17 @@ export function PromptSearchAndFilters({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="justify-between w-[160px]">
                 <span className="flex items-center space-x-2">
-                  {filters.promptType ? (
+                  {filters.promptTypeId ? (
                     <>
                       <span>
                         {
-                          PROMPT_TYPES.find((t) => t.id === filters.promptType)
+                          promptTypes.find((t) => t.id === filters.promptTypeId)
                             ?.icon
                         }
                       </span>
                       <span>
                         {
-                          PROMPT_TYPES.find((t) => t.id === filters.promptType)
+                          promptTypes.find((t) => t.id === filters.promptTypeId)
                             ?.name
                         }
                       </span>
@@ -195,7 +196,7 @@ export function PromptSearchAndFilters({
               </div>
               <DropdownMenuItem
                 onClick={() => handlePromptTypeFilter(undefined)}
-                className={`${!filters.promptType ? "bg-accent" : ""}`}
+                className={`${!filters.promptTypeId ? "bg-accent" : ""}`}
               >
                 All Types
               </DropdownMenuItem>
@@ -203,7 +204,7 @@ export function PromptSearchAndFilters({
                 <DropdownMenuItem
                   key={type.id}
                   onClick={() => handlePromptTypeFilter(type.id)}
-                  className={`${filters.promptType === type.id ? "bg-accent" : ""}`}
+                  className={`${filters.promptTypeId === type.id ? "bg-accent" : ""}`}
                 >
                   <div className="flex items-center space-x-2">
                     <span>{type.icon}</span>
@@ -263,11 +264,11 @@ export function PromptSearchAndFilters({
             </Badge>
           )}
 
-          {filters.promptType && (
+          {filters.promptTypeId && (
             <Badge variant="secondary" className="text-xs">
-              {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.icon}{" "}
-              {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.name ||
-                filters.promptType}
+              {promptTypes.find((t) => t.id === filters.promptTypeId)?.icon}{" "}
+              {promptTypes.find((t) => t.id === filters.promptTypeId)?.name ||
+                filters.promptTypeId}
             </Badge>
           )}
         </div>

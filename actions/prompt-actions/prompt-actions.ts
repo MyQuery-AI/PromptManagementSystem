@@ -48,10 +48,13 @@ export async function getPrompts(
 
     if (filters?.search) {
       where.OR = [
-        { feature: { contains: filters.search, mode: "insensitive" } },
         { content: { contains: filters.search, mode: "insensitive" } },
         { createdBy: { contains: filters.search, mode: "insensitive" } },
-        { promptType: { contains: filters.search, mode: "insensitive" } },
+        {
+          promptType: {
+            name: { contains: filters.search, mode: "insensitive" },
+          },
+        },
       ];
     }
 
@@ -59,12 +62,8 @@ export async function getPrompts(
       where.isActive = filters.isActive;
     }
 
-    if (filters?.feature) {
-      where.feature = filters.feature;
-    }
-
-    if (filters?.promptType) {
-      where.promptType = filters.promptType;
+    if (filters?.promptTypeId) {
+      where.promptTypeId = filters.promptTypeId;
     }
 
     if (filters?.createdBy) {
@@ -73,6 +72,7 @@ export async function getPrompts(
 
     const prompts = await prisma.prompt.findMany({
       where,
+      include: { promptType: true },
       orderBy: { updatedAt: "desc" },
     });
 
@@ -120,6 +120,7 @@ export async function getPromptById(
 
     const prompt = await prisma.prompt.findUnique({
       where: { id },
+      include: { promptType: true },
     });
 
     if (!prompt) {
@@ -173,13 +174,13 @@ export async function createPrompt(
 
     const prompt = await prisma.prompt.create({
       data: {
-        feature: input.feature,
-        promptType: input.promptType,
+        promptTypeId: input.promptTypeId,
         version: input.version || "v1",
         content: input.content,
         isActive: input.isActive ?? true,
         createdBy: input.createdBy,
       },
+      include: { promptType: true },
     });
 
     revalidatePath("/prompts");
@@ -240,9 +241,8 @@ export async function updatePrompt(
 
     const updateData: any = {};
 
-    if (input.feature !== undefined) updateData.feature = input.feature;
-    if (input.promptType !== undefined)
-      updateData.promptType = input.promptType;
+    if (input.promptTypeId !== undefined)
+      updateData.promptTypeId = input.promptTypeId;
     if (input.version !== undefined) updateData.version = input.version;
     if (input.content !== undefined) updateData.content = input.content;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
@@ -250,6 +250,7 @@ export async function updatePrompt(
     const prompt = await prisma.prompt.update({
       where: { id: input.id },
       data: updateData,
+      include: { promptType: true },
     });
 
     revalidatePath("/prompts");
@@ -392,8 +393,7 @@ export async function togglePromptStatus(
  * Duplicate a prompt
  */
 export async function duplicatePrompt(
-  id: number,
-  newFeature?: string
+  id: number
 ): Promise<PromptActionResult<PromptResponse>> {
   try {
     // Check authentication
@@ -431,13 +431,13 @@ export async function duplicatePrompt(
 
     const prompt = await prisma.prompt.create({
       data: {
-        feature: newFeature || `${existingPrompt.feature}_copy`,
-        promptType: existingPrompt.promptType,
+        promptTypeId: existingPrompt.promptTypeId,
         version: "v1",
         content: existingPrompt.content,
         isActive: false, // Start as inactive for review
         createdBy: existingPrompt.createdBy,
       },
+      include: { promptType: true },
     });
 
     revalidatePath("/prompts");
