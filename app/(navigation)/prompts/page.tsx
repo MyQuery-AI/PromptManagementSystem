@@ -4,6 +4,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PromptStatsCards, PromptsContainer } from "@/components/prompts";
 import { getPrompts } from "@/actions/prompt-actions";
 
+// Force dynamic rendering since we use authentication
+export const dynamic = "force-dynamic";
+
 // Mock user role - replace with actual auth logic
 async function getUserRole(): Promise<string> {
   // This should come from your auth system

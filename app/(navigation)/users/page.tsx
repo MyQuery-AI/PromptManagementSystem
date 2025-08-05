@@ -1,6 +1,10 @@
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+
+// Force dynamic rendering since we use authentication
+export const dynamic = "force-dynamic";
+
 import {
   Users,
   UserPlus,

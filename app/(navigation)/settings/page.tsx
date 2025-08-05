@@ -1,5 +1,9 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+
+// Force dynamic rendering since we use authentication
+export const dynamic = "force-dynamic";
+
 import { Settings, Database, Bell, Lock, Palette } from "lucide-react";
 import {
   Card,

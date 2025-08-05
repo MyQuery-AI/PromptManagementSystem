@@ -81,6 +81,16 @@ export function PromptsTable({
                     <div className="text-muted-foreground text-xs">
                       {prompt.promptType?.usage || "General Use"}
                     </div>
+                    {prompt.feature && (
+                      <div className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-50 border-slate-200 font-mono text-slate-600 text-xs"
+                        >
+                          {prompt.feature}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

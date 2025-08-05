@@ -106,7 +106,7 @@ export function PromptSearchAndFilters({
           <div className="relative flex-1 min-w-[240px] max-w-md">
             <Search className="top-2.5 left-2 absolute w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search prompts..."
+              placeholder="Search by feature, content, or creator..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8"

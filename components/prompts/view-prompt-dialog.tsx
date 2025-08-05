@@ -83,6 +83,23 @@ export function ViewPromptDialog({
             )}
           </div>
 
+          {prompt.feature && (
+            <div className="gap-2 grid">
+              <Label className="font-medium text-sm">Feature Name</Label>
+              <div className="flex items-center space-x-2">
+                <Badge
+                  variant="outline"
+                  className="bg-slate-100 border-slate-300 font-mono text-slate-800"
+                >
+                  {prompt.feature}
+                </Badge>
+                <span className="text-muted-foreground text-sm">
+                  System feature identifier
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="gap-4 grid grid-cols-2">
             <div className="gap-2 grid">
               <Label className="font-medium text-sm">Version</Label>
