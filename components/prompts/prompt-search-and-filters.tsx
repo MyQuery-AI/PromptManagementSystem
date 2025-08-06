@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { PromptTypeResponse } from "@/actions/prompt-type-actions/types";
-import { PROMPT_TYPES } from "@/lib/prompt-types";
 import type { PromptFilters } from "@/actions/prompt-actions/types";
 
 interface PromptSearchAndFiltersProps {
@@ -54,8 +53,8 @@ export function PromptSearchAndFilters({
     setStatusSearchTerm(""); // Reset search when filter is applied
   };
 
-  const handlePromptTypeFilter = (promptType: string | undefined) => {
-    onFiltersChange({ ...filters, promptType });
+  const handlePromptTypeFilter = (promptTypeId: string | undefined) => {
+    onFiltersChange({ ...filters, promptTypeId });
     setTypeSearchTerm(""); // Reset search when filter is applied
   };
 
@@ -66,10 +65,10 @@ export function PromptSearchAndFilters({
     onFiltersChange({});
   };
 
-  const filteredPromptTypes = PROMPT_TYPES.filter(
+  const filteredPromptTypes = promptTypes.filter(
     (type) =>
       type.name.toLowerCase().includes(typeSearchTerm.toLowerCase()) ||
-      type.description.toLowerCase().includes(typeSearchTerm.toLowerCase())
+      type.usage.toLowerCase().includes(typeSearchTerm.toLowerCase())
   );
 
   // Status options for filtering
@@ -95,7 +94,6 @@ export function PromptSearchAndFilters({
     filters.isActive !== undefined ||
     filters.promptTypeId ||
     filters.feature ||
-    filters.promptType ||
     filters.createdBy;
 
   return (
@@ -106,7 +104,7 @@ export function PromptSearchAndFilters({
           <div className="relative flex-1 min-w-[240px] max-w-md">
             <Search className="top-2.5 left-2 absolute w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by feature, content, or creator..."
+              placeholder="Search by feature..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8"
@@ -270,11 +268,11 @@ export function PromptSearchAndFilters({
             </Badge>
           )}
 
-          {filters.promptType && (
+          {filters.promptTypeId && (
             <Badge variant="secondary" className="text-xs">
-              {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.icon}{" "}
-              {PROMPT_TYPES.find((t) => t.id === filters.promptType)?.name ||
-                filters.promptType}
+              {promptTypes.find((t) => t.id === filters.promptTypeId)?.icon}{" "}
+              {promptTypes.find((t) => t.id === filters.promptTypeId)?.name ||
+                filters.promptTypeId}
             </Badge>
           )}
         </div>

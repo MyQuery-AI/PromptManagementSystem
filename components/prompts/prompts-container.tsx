@@ -55,12 +55,8 @@ export function PromptsContainer({
   const filteredPrompts = prompts.filter((prompt) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      if (!prompt.feature || !prompt.content) return false;
-      const matchesSearch =
-        prompt.feature.toLowerCase().includes(searchLower) ||
-        prompt.content.toLowerCase().includes(searchLower) ||
-        (prompt.createdBy &&
-          prompt.createdBy.toLowerCase().includes(searchLower));
+      if (!prompt.feature) return false;
+      const matchesSearch = prompt.feature.toLowerCase().includes(searchLower);
 
       if (!matchesSearch) return false;
     }
