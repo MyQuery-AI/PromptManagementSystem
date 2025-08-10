@@ -28,7 +28,7 @@ import type { PromptTypeResponse } from "@/actions/prompt-type-actions";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { PROMPT_TYPES, getPromptTypeById } from "@/lib/prompt-types";
+// Removed unused/conflicting imports from prompt-types to avoid shadowing local helper
 import { extractPromptVariables } from "@/lib/prompt-variables";
 import { toast } from "sonner";
 import type {
@@ -154,6 +154,20 @@ export function PromptFormDialog({
 
     fetchPromptTypes();
   }, []);
+
+  // Sync form with selected prompt when opening in edit mode
+  useEffect(() => {
+    if (open && mode === "edit" && prompt) {
+      setFormData({
+        feature: prompt.feature || "",
+        promptTypeId: prompt.promptTypeId || "",
+        content: prompt.content || "",
+        isActive: prompt.isActive ?? true,
+      });
+      // Re-enable quote checks when switching prompts
+      setIgnoreQuoteWarning(false);
+    }
+  }, [open, mode, prompt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -28,6 +28,7 @@ export function PromptsContainer({
   initialPrompts,
   userRole,
 }: PromptsContainerProps) {
+  console.log(initialPrompts);
   const [prompts, setPrompts] = useState<PromptResponse[]>(initialPrompts);
   const [filters, setFilters] = useState<PromptFilters>({});
   const [promptTypes, setPromptTypes] = useState<PromptTypeResponse[]>([]);
