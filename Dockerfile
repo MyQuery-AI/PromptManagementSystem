@@ -17,6 +17,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+#Migrate database
+CMD ["sh", "-c", "pnpm run migrate:deploy && node server.js"]
+
 # Generate Prisma client
 RUN npx prisma generate
 
@@ -62,4 +65,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "pnpm run migrate:deploy && node server.js"]
