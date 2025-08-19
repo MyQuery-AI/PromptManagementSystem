@@ -78,7 +78,7 @@ export default function PromptTypesPage() {
       <div className="mx-auto max-w-6xl">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="font-bold text-3xl text-gray-900">Prompt Types</h1>
+            <h1 className="font-bold text-gray-900 text-3xl">Prompt Types</h1>
             <p className="mt-2 text-gray-600">
               Manage the different types of prompts available in your system.
             </p>
@@ -92,14 +92,14 @@ export default function PromptTypesPage() {
         <div className="bg-white shadow-sm border rounded-lg">
           {isLoading ? (
             <div className="p-6">
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-2xl mb-4">Loading...</div>
+              <div className="py-12 text-center">
+                <div className="mb-4 text-gray-400 text-2xl">Loading...</div>
               </div>
             </div>
           ) : promptTypes.length === 0 ? (
             <div className="p-6">
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📝</div>
+              <div className="py-12 text-center">
+                <div className="mb-4 text-gray-400 text-6xl">📝</div>
                 <h3 className="mb-2 font-medium text-gray-900 text-lg">
                   No prompt types yet
                 </h3>

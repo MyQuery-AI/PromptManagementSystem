@@ -36,6 +36,7 @@ import type {
   CreatePromptInput,
   UpdatePromptInput,
 } from "@/actions/prompt-actions/types";
+import { PromptCategoryNames } from "@/app/generated/prisma";
 
 // Helper function to increment version
 function getNextVersion(currentVersion: string): string {
@@ -77,6 +78,7 @@ export function PromptFormDialog({
     feature: prompt?.feature || "",
     promptTypeId:
       prompt?.promptTypeId || (promptTypes.length > 0 ? promptTypes[0].id : ""),
+    promptCategory: prompt?.promptCategory || "",
     content: prompt?.content || "",
     isActive: prompt?.isActive ?? true,
   });
@@ -161,6 +163,7 @@ export function PromptFormDialog({
       setFormData({
         feature: prompt.feature || "",
         promptTypeId: prompt.promptTypeId || "",
+        promptCategory: prompt.promptCategory || "",
         content: prompt.content || "",
         isActive: prompt.isActive ?? true,
       });
@@ -177,6 +180,7 @@ export function PromptFormDialog({
       if (mode === "create") {
         const createData: CreatePromptInput = {
           promptTypeId: formData.promptTypeId,
+          promptCategory: formData.promptCategory as PromptCategoryNames,
           feature: formData.feature,
           version: "v1", // Always start with v1 for new prompts
           content: formData.content,
@@ -196,6 +200,7 @@ export function PromptFormDialog({
         const updateData: UpdatePromptInput = {
           id: prompt.id,
           promptTypeId: formData.promptTypeId,
+          promptCategory: formData.promptCategory as PromptCategoryNames,
           feature: formData.feature,
           version: displayVersion, // Use the auto-calculated next version
           content: formData.content,
@@ -220,6 +225,7 @@ export function PromptFormDialog({
   const resetForm = () => {
     setFormData({
       promptTypeId: promptTypes.length > 0 ? promptTypes[0].id : "",
+      promptCategory: prompt?.promptCategory || "",
       feature: "",
       content: "",
       isActive: true,
@@ -313,6 +319,40 @@ export function PromptFormDialog({
                     </div>
                   ) : null;
                 })()}
+              </div>
+              <div className="gap-2 grid">
+                <Label htmlFor="promptCategory">Prompt Category</Label>
+                <Select
+                  value={formData.promptCategory}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, promptCategory: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select prompt category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    (
+                    <>
+                      {Object.values(PromptCategoryNames).map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+
+                      <div className="my-1 border-t" />
+                      <Link
+                        href="/prompt-types"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        <div className="flex items-center space-x-2 hover:bg-gray-100 px-2 py-1.5 rounded-sm text-sm cursor-pointer">
+                          <Plus className="w-4 h-4" />
+                          <span>Create new prompt type</span>
+                        </div>
+                      </Link>
+                    </>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="gap-2 grid">

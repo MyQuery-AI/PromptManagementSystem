@@ -1,5 +1,8 @@
+import { PromptCategoryNames } from "@/app/generated/prisma";
+
 export interface CreatePromptInput {
   promptTypeId: string;
+  promptCategory: PromptCategoryNames;
   feature: string;
   version?: string;
   content: string;
@@ -10,6 +13,7 @@ export interface CreatePromptInput {
 export interface UpdatePromptInput {
   id: number;
   promptTypeId?: string;
+  promptCategory?: PromptCategoryNames;
   feature?: string;
   promptType?: string;
   version?: string;
@@ -21,6 +25,7 @@ export interface PromptFilters {
   search?: string;
   isActive?: boolean;
   promptTypeId?: string;
+  promptCategory?: PromptCategoryNames;
   feature?: string;
   promptType?: string;
   createdBy?: string;
@@ -29,6 +34,7 @@ export interface PromptFilters {
 export interface PromptResponse {
   id: number;
   promptTypeId: string;
+  promptCategory: PromptCategoryNames;
   feature?: string;
   version: string;
   content: string;

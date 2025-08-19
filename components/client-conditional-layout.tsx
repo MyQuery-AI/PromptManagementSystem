@@ -2,7 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import { Sidebar, SidebarLayout } from "@/components/ui/sidebar";
-import { FileText, Users, Settings, BarChart, Tags } from "lucide-react";
+import {
+  FileText,
+  Users,
+  Settings,
+  BarChart,
+  Tags,
+  Folder,
+} from "lucide-react";
 import { SessionProvider } from "next-auth/react";
 
 interface SidebarItem {
@@ -28,6 +35,11 @@ const baseSidebarItems: SidebarItem[] = [
     href: "/prompt-types",
     icon: <Tags className="w-4 h-4" />,
     requiresRole: "Admin", // Only Admins and Owners can manage prompt types
+  },
+  {
+    title: "Prompt History",
+    href: "/prompt-history",
+    icon: <Folder className="w-4 h-4" />, // New menu item
   },
   {
     title: "Users",

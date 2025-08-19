@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { PromptTypeResponse } from "@/actions/prompt-type-actions/types";
 import type { PromptFilters } from "@/actions/prompt-actions/types";
+import { PromptCategoryNames } from "@/app/generated/prisma";
 
 interface PromptSearchAndFiltersProps {
   filters: PromptFilters;
@@ -27,6 +28,7 @@ interface PromptSearchAndFiltersProps {
   onCreateNew?: () => void;
   userRole: string;
   promptTypes: PromptTypeResponse[];
+  promptCategories: PromptCategoryNames[];
 }
 
 export function PromptSearchAndFilters({
@@ -35,9 +37,11 @@ export function PromptSearchAndFilters({
   onCreateNew,
   userRole,
   promptTypes,
+  promptCategories,
 }: PromptSearchAndFiltersProps) {
   const [searchTerm, setSearchTerm] = useState(filters.search || "");
   const [typeSearchTerm, setTypeSearchTerm] = useState("");
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [statusSearchTerm, setStatusSearchTerm] = useState("");
 
   const isOwner = userRole === "Owner";
@@ -71,6 +75,12 @@ export function PromptSearchAndFilters({
       type.usage.toLowerCase().includes(typeSearchTerm.toLowerCase())
   );
 
+  const filterPromptCategories = promptTypes.filter(
+    (category) =>
+      category.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) ||
+      category.usage.toLowerCase().includes(categorySearchTerm.toLowerCase())
+  );
+
   // Status options for filtering
   const statusOptions = [
     {
@@ -93,6 +103,7 @@ export function PromptSearchAndFilters({
     filters.search ||
     filters.isActive !== undefined ||
     filters.promptTypeId ||
+    filters.promptCategory ||
     filters.feature ||
     filters.createdBy;
 
@@ -163,7 +174,7 @@ export function PromptSearchAndFilters({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="justify-between w-[160px]">
-                <span className="flex items-center space-x-2">
+                <span className="flex items-center space-x-2 truncate">
                   {filters.promptTypeId ? (
                     <>
                       <span>
@@ -226,6 +237,73 @@ export function PromptSearchAndFilters({
                   No types found
                 </div>
               )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* Category Filter Dropdown with Search */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="justify-between w-[160px]">
+                <span className="flex items-center space-x-2 truncate">
+                  {filters.promptCategory ? (
+                    <span>
+                      {promptCategories.find(
+                        (c) => c === filters.promptCategory
+                      ) || filters.promptCategory}
+                    </span>
+                  ) : (
+                    <span>All Categories</span>
+                  )}
+                </span>
+                <ChevronDown className="opacity-50 w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[200px]">
+              <div className="p-2">
+                <div className="relative">
+                  <Search className="top-2.5 left-2 absolute w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search categories..."
+                    value={categorySearchTerm}
+                    onChange={(e) => setCategorySearchTerm(e.target.value)}
+                    className="pl-8 h-8"
+                  />
+                </div>
+              </div>
+              <DropdownMenuItem
+                onClick={() =>
+                  onFiltersChange({ ...filters, promptCategory: undefined })
+                }
+                className={`${!filters.promptCategory ? "bg-accent" : ""}`}
+              >
+                All Categories
+              </DropdownMenuItem>
+              {promptCategories
+                .filter((category) =>
+                  category
+                    .toLowerCase()
+                    .includes(categorySearchTerm.toLowerCase())
+                )
+                .map((category) => (
+                  <DropdownMenuItem
+                    key={category}
+                    onClick={() =>
+                      onFiltersChange({ ...filters, promptCategory: category })
+                    }
+                    className={`${filters.promptCategory === category ? "bg-accent" : ""}`}
+                  >
+                    {category.replace(/_/g, " ")} {/* nicer display */}
+                  </DropdownMenuItem>
+                ))}
+              {promptCategories.filter((category) =>
+                category
+                  .toLowerCase()
+                  .includes(categorySearchTerm.toLowerCase())
+              ).length === 0 &&
+                categorySearchTerm && (
+                  <div className="px-2 py-6 text-muted-foreground text-sm text-center">
+                    No categories found
+                  </div>
+                )}
             </DropdownMenuContent>
           </DropdownMenu>
 

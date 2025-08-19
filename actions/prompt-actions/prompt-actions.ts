@@ -186,11 +186,18 @@ export async function createPrompt(
     const prompt = await prisma.prompt.create({
       data: {
         promptTypeId: input.promptTypeId,
+        promptCategory: input.promptCategory,
         feature: input.feature,
         version: input.version || "v1",
         content: input.content,
         isActive: input.isActive ?? true,
         createdBy: input.createdBy,
+        prompthistory: {
+          create: {
+            content: input.content,
+            version: input.version || "v1",
+          },
+        },
       },
       include: { promptType: true },
     });
@@ -252,21 +259,34 @@ export async function updatePrompt(
     }
 
     const updateData: any = {};
-
+    const createChatHistory = input.content !== existingPrompt.content;
     if (input.promptTypeId !== undefined)
       updateData.promptTypeId = input.promptTypeId;
+    if (input.promptCategory !== undefined)
+      updateData.promptCategory = input.promptCategory;
     if (input.feature !== undefined) updateData.feature = input.feature;
     if (input.promptType !== undefined)
       updateData.promptType = input.promptType;
     if (input.version !== undefined) updateData.version = input.version;
     if (input.content !== undefined) updateData.content = input.content;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
-
+    console.log("versiion", input.version);
     const prompt = await prisma.prompt.update({
       where: { id: input.id },
       data: updateData,
       include: { promptType: true },
     });
+
+    if (createChatHistory) {
+      // Create a new history entry if content has changed
+      await prisma.promptHistory.create({
+        data: {
+          promptId: prompt.id,
+          content: prompt.content,
+          version: prompt.version,
+        },
+      });
+    }
 
     revalidatePath("/prompts");
 
@@ -448,11 +468,18 @@ export async function duplicatePrompt(
     const prompt = await prisma.prompt.create({
       data: {
         promptTypeId: existingPrompt.promptTypeId,
+        promptCategory: existingPrompt.promptCategory,
         feature: newFeature || `${existingPrompt.feature}_copy`,
-        version: "v1",
+        version: existingPrompt.version || "v1",
         content: existingPrompt.content,
         isActive: false, // Start as inactive for review
         createdBy: existingPrompt.createdBy,
+        prompthistory: {
+          create: {
+            content: existingPrompt.content,
+            version: existingPrompt.version || "v1",
+          },
+        },
       },
       include: { promptType: true },
     });

@@ -10,9 +10,9 @@ generator PrismaClient {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
@@ -62,18 +62,41 @@ model UserPermission {
 }
 
 model Prompt {
-  id           Int        @id @default(autoincrement())
-  feature      String // e.g. 'generate_sql', 'explain_query'
-  promptTypeId String // Foreign key to PromptType
-  version      String     @default("v1") // prompt version
-  content      String // actual prompt content
-  isActive     Boolean    @default(true) // active version toggle
-  createdBy    String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  promptType   PromptType @relation(fields: [promptTypeId], references: [id], onDelete: Cascade)
+  id             Int                 @id @default(autoincrement())
+  feature        String
+  promptTypeId   String
+  promptCategory PromptCategoryNames
+  version        String              @default("v1")
+  content        String
+  isActive       Boolean             @default(true)
+  createdBy      String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  prompthistory PromptHistory[]
+  promptType    PromptType      @relation(fields: [promptTypeId], references: [id], onDelete: Cascade)
 
   @@map("prompts")
+}
+
+enum PromptCategoryNames {
+  SQL_GENERATION
+  DASHBOARD_GENERATION
+  HYBRID_GENERATION
+  GENERAL
+}
+
+model PromptHistory {
+  id        Int      @id @default(autoincrement())
+  promptId  Int
+  version   String   @default("v1") // version of the prompt at the time of history
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prompt Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@map("prompt_history")
 }
 
 model PromptType {

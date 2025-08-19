@@ -18,6 +18,7 @@ import type {
   PromptFilters,
 } from "@/actions/prompt-actions/types";
 import type { PromptTypeResponse } from "@/actions/prompt-type-actions/types";
+import { PromptCategoryNames } from "@/app/generated/prisma";
 
 interface PromptsContainerProps {
   initialPrompts: PromptResponse[];
@@ -32,6 +33,9 @@ export function PromptsContainer({
   const [prompts, setPrompts] = useState<PromptResponse[]>(initialPrompts);
   const [filters, setFilters] = useState<PromptFilters>({});
   const [promptTypes, setPromptTypes] = useState<PromptTypeResponse[]>([]);
+  const promptCategories = Array.from(
+    new Set(prompts.map((p) => p.promptCategory).filter(Boolean))
+  ) as PromptCategoryNames[];
 
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -69,7 +73,10 @@ export function PromptsContainer({
       return false;
     }
 
-    if (filters.promptTypeId && prompt.promptTypeId !== filters.promptTypeId) {
+    if (
+      filters.promptCategory &&
+      prompt.promptCategory !== filters.promptCategory
+    ) {
       return false;
     }
 
@@ -122,6 +129,7 @@ export function PromptsContainer({
             onCreateNew={handleCreateNew}
             userRole={userRole}
             promptTypes={promptTypes}
+            promptCategories={promptCategories}
           />
         </CardHeader>
 

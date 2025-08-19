@@ -3,14 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, FileText, Users, Settings, BarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
+// ---------------- Sidebar ----------------
 
 interface SidebarItem {
   title: string;
   href: string;
   icon?: React.ReactNode;
+  requiresRole?: "Owner" | "Admin" | "Developer";
 }
 
 interface SidebarProps {
@@ -48,6 +51,8 @@ export function Sidebar({ items, className }: SidebarProps) {
     </div>
   );
 }
+
+// ---------------- Sidebar Layout ----------------
 
 interface SidebarLayoutProps {
   sidebar: React.ReactNode;
