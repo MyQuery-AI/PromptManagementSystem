@@ -46,6 +46,9 @@ jobs:
             echo "Current deployment: $CURRENT_DEPLOYMENT"
             echo "Deploying new version to: $NEW_DEPLOYMENT"
 
+            echo "Running database migrations..."
+            make migrate
+
             # Deploy new version
             echo "Deploying $NEW_DEPLOYMENT..."
             make deploy-$NEW_DEPLOYMENT
